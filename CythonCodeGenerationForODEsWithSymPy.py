@@ -20,25 +20,26 @@ symbols('dt')==symbols('dt')
 # Start with a simple oscillator model
 
 
-x, y, dt, tau, a = symbols('x y dt tau a')
+x, y, dt, tau, I, a, b, c, d, d, e, f, g, alpha, beta, c_0, lc_0 = symbols('x y dt tau I a b c d d e f g alpha beta c_0 lc_0')
 
 ddt = {
-    x: tau*(x - x**3/3 + y),
-    y: (a - x)/tau
+    x: d * tau * (alpha * y - f * x**3 + e * x**2 + g * x + I + c_0 + lc_0),
+    y: d * (a + b * x + c * x**2 - beta * y) / tau
 }
+
 param = [a, tau]
 
 # Form the "half" step, and then the full step for the Heun method
 
-
 half = {u: u + dt*du for u, du in ddt.iteritems()}
-heun = [u + (du + du.subs(half))*dt/2 for u, du in half.iteritems()]
+heun = [u + (du + du.subs(half))*dt/2 for u, du in ddt.iteritems()]
 
 
 # Then, ask sympy to perform common subexpression elimination, or `cse`, so that we don't compute the same thing multiple times
 
 
 aux, exs = cse(heun)
+print exs
 for l, r in aux:
     print l, '<-', r
 for u, ex in zip(ddt.keys(), exs):
@@ -61,7 +62,7 @@ cdef = 'float ' + ', '.join([str(ke) for ke in ddt.keys()]) + '\n        ' + 'fl
 eq_def = ('; '.join(['%s=X[%d]' % (str(u), i) for i, u in enumerate(ddt.keys())]) + '\n    ' +
          ''.join(['%s = %s;\n    ' % (l, str(r)) for l, r in aux]) + '\n')
 parameters =  ', '.join([str(parv) for parv in param]) + ' = ' + ', '.join(["param['%s']" % parv for parv in param])
-equations = '\n    '.join('DX[%d] = %s' % (i, str(ex)) for i, ex in enumerate(exs))
+equations = '\n    '.join('DX%d = %s' % (i, str(ex)) for i, ex in enumerate(exs))
 #loop = ('; '.join(['%s=X[%d]' % (ccode(u), i) for i, u in enumerate(ddt.keys())]) + ';\n\n'
 #    + ''.join(['%s = %s;\n' % (l, ccode(r)) for l, r in aux]) + '\n'
 #    + ''.join(['DX[%d] = %s;\n' % (i, ccode(ex)) for i, ex in enumerate(exs)])
